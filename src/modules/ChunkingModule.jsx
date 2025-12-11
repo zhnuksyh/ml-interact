@@ -8,18 +8,83 @@ export default function ChunkingModule() {
     const [overlap, setOverlap] = useState(0);
     const [model, setModel] = useState('gpt4o');
     const [isExpanded, setIsExpanded] = useState(false);
+    const [smartMode, setSmartMode] = useState(false);
 
     // Calculate Chunks
     const chunks = useMemo(() => {
         let res = [];
-        const step = Math.max(1, chunkSize - overlap);
-        for (let i = 0; i < text.length; i += step) {
-            let chunkText = text.substring(i, i + chunkSize);
-            if (chunkText.length < chunkSize && i > 0 && chunkText.length < 5) break;
-            res.push(chunkText);
+        let i = 0;
+
+        while (i < text.length) {
+            let limit = i + chunkSize;
+            let end = Math.min(limit, text.length);
+
+            if (smartMode && end < text.length) {
+                // Recursive Semantic splitting:
+                // Try to break at: \n\n > \n > . > , > space
+                const delimiters = [
+                    { char: '\n\n', len: 2 },
+                    { char: '\n', len: 1 },
+                    { char: '. ', len: 1 }, // keep the period, break after
+                    { char: ', ', len: 1 },
+                    { char: ' ', len: 1 }
+                ];
+
+                let bestBreak = -1;
+                let bufferZone = Math.min(30, chunkSize * 0.3); // Look back 30% or 30 chars
+                let searchStart = Math.max(i, end - 50); // Don't allow chunks smaller than X effectively
+
+                for (let d of delimiters) {
+                    const lastIdx = text.lastIndexOf(d.char, end);
+                    // Must be within reasonably close range to the limit (don't shrink chunk too much)
+                    if (lastIdx > i + (chunkSize * 0.5)) {
+                        bestBreak = lastIdx + d.len; // Include delimiter in prev chunk usually, or split after
+                        if (d.char === '. ') bestBreak = lastIdx + 1; // Keep . in first chunk
+                        break; // Found highest priority delimiter
+                    }
+                }
+
+                if (bestBreak > i) {
+                    end = bestBreak;
+                }
+            }
+
+            let chunkText = text.substring(i, end).trim();
+            if (chunkText) res.push(chunkText);
+
+            if (end === text.length) break; // Stop if we've reached the end
+
+            // Calculate next start
+            if (smartMode) {
+                let nextI = end;
+                // Move start forward to skip delimiter spaces if needed
+                while (nextI < text.length && (text[nextI] === ' ' || text[nextI] === '\n')) {
+                    nextI++;
+                }
+
+                if (overlap > 0) {
+                    nextI = Math.max(i + 1, end - overlap);
+                }
+
+                // SAFETY: Ensure we always advance
+                i = Math.max(i + 1, nextI);
+            } else {
+                i += Math.max(1, chunkSize - overlap);
+            }
         }
+
+        // Simple filter for tiny trailing chunks
+        if (res.length > 1 && res[res.length - 1].length < 5) res.pop();
+
         return res;
-    }, [text, chunkSize, overlap]);
+    }, [text, chunkSize, overlap, smartMode]);
+
+    // PRESETS
+    const applyOptimalSettings = () => {
+        setSmartMode(true);
+        setChunkSize(150);
+        setOverlap(30);
+    };
 
     // Calculate Tokens
     const tokens = useMemo(() => tokenize(text, model), [text, model]);
@@ -34,8 +99,19 @@ export default function ChunkingModule() {
     const info = models[model];
     const cost = (tokens.length / 1000000) * info.in;
 
+    // Derived State for UI
+    const isOptimal = chunkSize === 150 && overlap === 30 && smartMode;
+
+    const toggleOptimal = () => {
+        if (!isOptimal) {
+            applyOptimalSettings();
+        }
+    };
+
     return (
         <div className="flex flex-col gap-6 animate-in fade-in zoom-in duration-300">
+            {/* ... (Explainer + Inputs skipped for brevity, keeping existing structure) ... */}
+
             <div className="explainer-box">
                 <div className="explainer-title">
                     <span className="bg-blue-600/20 text-blue-400 p-1 rounded mr-3 text-xs">MODULE 1</span>
@@ -107,30 +183,69 @@ export default function ChunkingModule() {
 
             {/* Chunking Viz */}
             <div className="glass-panel p-4 rounded-xl">
-                <div className="flex flex-wrap gap-6 mb-4 items-center border-b border-slate-800 pb-4">
-                    <div className="flex-1 min-w-[200px]">
-                        <div className="flex justify-between text-xs mb-1">
-                            <span>Chunk Size</span>
-                            <span className="font-bold text-blue-400">{chunkSize} chars</span>
-                        </div>
-                        <input
-                            type="range" min="5" max="200" step="1"
-                            value={chunkSize}
-                            onChange={(e) => setChunkSize(parseInt(e.target.value))}
-                            className="w-full accent-blue-500"
-                        />
+                <div className="flex flex-col border-b border-slate-800 pb-4 mb-4">
+                    <div className="flex justify-end items-center gap-6 mb-4">
+                        {/* Auto-Optimal Toggle */}
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                            <span className={clsx(
+                                "text-xs font-bold transition-colors uppercase tracking-wider",
+                                isOptimal ? "text-green-400" : "text-slate-400 group-hover:text-green-400"
+                            )}>
+                                Auto-Optimal
+                            </span>
+                            <div className="relative inline-flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={isOptimal}
+                                    onChange={toggleOptimal}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                            </div>
+                        </label>
+
+                        {/* Smart Chunking Toggle */}
+                        <label className="flex items-center gap-3 cursor-pointer group">
+                            <span className="text-xs font-bold text-slate-400 group-hover:text-blue-400 transition-colors uppercase tracking-wider">
+                                Smart Chunking
+                            </span>
+                            <div className="relative inline-flex items-center">
+                                <input
+                                    type="checkbox"
+                                    checked={smartMode}
+                                    onChange={(e) => setSmartMode(e.target.checked)}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </div>
+                        </label>
                     </div>
-                    <div className="flex-1 min-w-[200px]">
-                        <div className="flex justify-between text-xs mb-1">
-                            <span>Overlap</span>
-                            <span className="font-bold text-purple-400">{overlap} chars</span>
+
+                    <div className="flex flex-wrap gap-6 items-center">
+                        <div className="flex-1 min-w-[200px]">
+                            <div className="flex justify-between text-xs mb-1">
+                                <span>Chunk Size</span>
+                                <span className="font-bold text-blue-400">{chunkSize} chars</span>
+                            </div>
+                            <input
+                                type="range" min="5" max="200" step="1"
+                                value={chunkSize}
+                                onChange={(e) => setChunkSize(parseInt(e.target.value))}
+                                className="w-full accent-blue-500"
+                            />
                         </div>
-                        <input
-                            type="range" min="0" max={Math.max(0, chunkSize - 5)} step="1"
-                            value={overlap}
-                            onChange={(e) => setOverlap(parseInt(e.target.value))}
-                            className="w-full accent-purple-500"
-                        />
+                        <div className="flex-1 min-w-[200px]">
+                            <div className="flex justify-between text-xs mb-1">
+                                <span>Overlap</span>
+                                <span className="font-bold text-purple-400">{overlap} chars</span>
+                            </div>
+                            <input
+                                type="range" min="0" max={Math.max(0, chunkSize - 5)} step="1"
+                                value={overlap}
+                                onChange={(e) => setOverlap(parseInt(e.target.value))}
+                                className="w-full accent-purple-500"
+                            />
+                        </div>
                     </div>
                 </div>
 
