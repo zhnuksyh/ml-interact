@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- 
+    ANTIGRAVITY AI TRAINING MODULE v7.0 (Migrated & Documented)
+    ----------------------------------------------------------
+    Purpose: A single-file, interactive educational platform to teach
+    core Generative AI concepts (LLMs, RAG, Quantization, etc.).
+    
+    Architecture:
+    - Pure HTML/JS (No build step required).
+    - Tailwind CSS via CDN for styling.
+    - FontAwesome via CDN for icons.
+    - Client-side logic only (Simulations run in browser memory).
+-->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interact - AI Learning Module</title>
+
+    <!-- EXTERNAL DEPENDENCIES -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="flex h-screen overflow-hidden text-sm">
+
+    <!-- ================================================================== -->
+    <!-- SIDEBAR NAVIGATION -->
+    <!-- ================================================================== -->
+    <div class="sidebar w-64 flex-shrink-0 hidden md:flex flex-col p-6 z-20 shadow-2xl">
+        <!-- Logo Area -->
+        <div class="mb-8 flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-900/50">
+                <i class="fas fa-atom text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-lg tracking-wide text-white">Interact <span class="text-blue-500">Core</span>
+                </h1>
+                <p class="text-[10px] text-blue-400 font-mono">Developed by Zahin Ukasyah</p>
+            </div>
+        </div>
+
+        <!-- Navigation Links -->
+        <nav class="space-y-1 flex-1 overflow-y-auto pr-2">
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 mt-2 px-3">Interactive Guide
+            </div>
+            <button onclick="switchTab('pipeline')" id="nav-pipeline"
+                class="nav-btn active w-full text-left px-4 py-3 rounded-lg flex items-center gap-3"><i
+                    class="fas fa-graduation-cap w-4"></i> AI Pipeline</button>
+            <button onclick="switchTab('quantization')" id="nav-quantization"
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3"><i
+                    class="fas fa-weight-hanging w-4"></i> Quantization Lab</button>
+
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-3">Core Engines</div>
+            <button onclick="switchTab('llm')" id="nav-llm"
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3"><i
+                    class="fas fa-brain w-4"></i> LLM Basics</button>
+            <button onclick="switchTab('inference')" id="nav-inference"
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3"><i
+                    class="fas fa-microchip w-4"></i> Inference</button>
+            <button onclick="switchTab('ocr')" id="nav-ocr"
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3"><i
+                    class="fas fa-eye w-4"></i> OCR Vision</button>
+
+            <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 mt-6 px-3">Advanced Systems
+            </div>
+            <button onclick="switchTab('rag')" id="nav-rag"
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3"><i
+                    class="fas fa-project-diagram w-4"></i> RAG Memory</button>
+            <button onclick="switchTab('mcp')" id="nav-mcp"
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3"><i
+                    class="fas fa-plug w-4"></i> MCP Tools</button>
+            <button onclick="switchTab('chat')" id="nav-chat"
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3"><i
+                    class="fas fa-comments w-4"></i> Prompt Engineering</button>
+            <button onclick="switchTab('host')" id="nav-host"
+                class="nav-btn w-full text-left px-4 py-3 rounded-lg flex items-center gap-3"><i
+                    class="fas fa-server w-4"></i> Infrastructure</button>
+        </nav>
+
+        <!-- Status Footer -->
+        <div class="mt-auto pt-4 border-t border-slate-800">
+            <div class="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg border border-slate-700">
+                <div class="w-2 h-2 rounded-full bg-green-500"></div>
+                <div>
+                    <div class="text-xs font-bold text-white">System Online</div>
+                    <div class="text-[10px] text-slate-400">Latency: <span class="font-mono text-green-400">1ms</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- MAIN CONTENT CANVAS -->
+    <!-- ================================================================== -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden relative bg-[#0b0f19]">
+        <!-- Background Grid Effect -->
+        <div class="absolute inset-0 pointer-events-none opacity-20"
+            style="background-image: radial-gradient(#3b82f6 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+        <!-- Mobile Header / Top Bar -->
+        <div
+            class="p-6 border-b border-slate-800/50 flex justify-between items-center z-10 bg-[#0b0f19]/80 backdrop-blur">
+            <h2 id="page-title" class="text-xl font-bold text-white flex items-center gap-3">Interact</h2>
+            <div class="text-xs text-slate-400">Interactive AI Learning</div>
+        </div>
+
+        <!-- Scrollable Module Container -->
+        <div class="flex-1 overflow-y-auto p-6 z-10 pb-20">
+
+            <!-- MODULE 1: AI PIPELINE (STEP-BY-STEP WIZARD) -->
+            <div id="content-pipeline" class="max-w-5xl mx-auto h-full flex flex-col">
+                <!-- Progress Indicators -->
+                <div class="flex items-center justify-between mb-8 px-10">
+                    <div class="step-dot active" id="dot-0"></div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" id="dot-1"></div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" id="dot-2"></div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" id="dot-3"></div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" id="dot-4"></div>
+                    <div class="step-line"></div>
+                    <div class="step-dot" id="dot-5"></div>
+                </div>
+
+                <div class="flex-1 relative min-h-[500px]">
+                    <!-- Step 0: Intro -->
+                    <div id="step-0"
+                        class="step-content absolute inset-0 flex flex-col items-center justify-center text-center animate-[fadeIn_0.5s]">
+                        <div class="explainer-box max-w-lg mx-auto text-left mb-8">
+                            <h4 class="explainer-title"><i class="fas fa-info-circle mr-2"></i>Concept: The Lifecycle of
+                                a Thought</h4>
+                            <p class="explainer-text">AI doesn't just "think." It follows a rigid mathematical pipeline.
+                                Stages: Input Analysis → Understanding (Embedding) → Memory Search (RAG) → Output
+                                Generation.</p>
+                        </div>
+                        <h1 class="text-4xl font-bold text-white mb-4">How LLMs Actually Work</h1>
+                        <button onclick="nextStep()"
+                            class="btn-primary px-8 py-3 rounded-full text-white font-semibold text-lg">Start
+                            Journey</button>
+                    </div>
+
+                    <!-- Step 1: Chunking -->
+                    <div id="step-1" class="step-content absolute inset-0 flex flex-col hidden animate-[fadeIn_0.5s]">
+                        <div class="explainer-box">
+                            <h4 class="explainer-title">1. Chunking & Tokenization</h4>
+                            <p class="explainer-text">We "slice" documents into <strong>Chunks</strong>. Try resizing
+                                the chunks below.</p>
+                        </div>
+                        <div class="glass-panel p-8 rounded-2xl border border-slate-700 flex-1">
+                            <div class="flex justify-between mb-4">
+                                <label class="text-slate-300">Chunk Size:</label>
+                                <span id="chunk-val" class="text-blue-400 font-mono">15 chars</span>
+                            </div>
+                            <input type="range" id="chunk-slider" min="5" max="50" value="15"
+                                class="w-full accent-blue-500 mb-2" oninput="updateChunking()">
+
+                            <div class="flex justify-between mb-2">
+                                <label class="text-slate-300">Overlap:</label>
+                                <span id="overlap-val" class="text-purple-400 font-mono">0 chars</span>
+                            </div>
+                            <input type="range" id="overlap-slider" min="0" max="20" value="0"
+                                class="w-full accent-purple-500 mb-6" oninput="updateChunking()">
+                            <textarea id="chunk-input"
+                                class="w-full bg-slate-900 text-slate-300 p-2 text-xs mb-4 rounded border border-slate-700"
+                                rows="2"
+                                onkeyup="updateChunking()">Antigravity technology utilizes electromagnetic fields to counteract gravitational pull. This manual covers installation.</textarea>
+                            <div id="chunk-display"
+                                class="bg-slate-900 p-4 rounded-xl font-mono text-lg leading-loose h-32 overflow-auto border border-slate-800 mb-6">
+                            </div>
+
+                            <!-- Tokenization Section -->
+                            <div class="border-t border-slate-700 pt-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h5 class="text-white font-bold flex items-center gap-2"><i
+                                            class="fas fa-coins text-yellow-500"></i> Tokenization</h5>
+                                    <select id="tokenizer-model"
+                                        class="bg-slate-800 text-xs text-white p-2 rounded border border-slate-600"
+                                        onchange="updateTokenization()">
+                                        <option value="gpt4o">ChatGPT-4o</option>
+                                        <option value="claude35">Claude 3.5 Sonnet</option>
+                                        <option value="gemini15">Gemini 1.5 Pro</option>
+                                        <option value="ollama">Ollama (Llama 3)</option>
+                                    </select>
+                                </div>
+                                <div
+                                    class="grid grid-cols-3 gap-2 mb-3 text-[10px] text-slate-400 bg-slate-800/50 p-2 rounded border border-slate-700/50">
+                                    <div class="text-center border-r border-slate-700">
+                                        <div class="font-bold text-slate-300">Context Window</div>
+                                        <div id="token-window" class="text-blue-400">128k</div>
+                                    </div>
+                                    <div class="text-center border-r border-slate-700">
+                                        <div class="font-bold text-slate-300">Input Cost</div>
+                                        <div id="cost-input" class="text-green-400">$5.00/1M</div>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="font-bold text-slate-300">Output Cost</div>
+                                        <div id="cost-output" class="text-green-400">$15.00/1M</div>
+                                    </div>
+                                </div>
+                                <div class="flex justify-between text-xs text-slate-400 mb-2">
+                                    <span>Token Count: <span id="token-count"
+                                            class="text-white font-bold">0</span></span>
+                                    <span>Est. Cost: <span id="token-cost"
+                                            class="text-yellow-400">$0.00000</span></span>
+                                </div>
+                                <div id="token-display"
+                                    class="bg-black p-3 rounded font-mono text-xs text-slate-300 flex flex-wrap gap-1 h-24 overflow-auto border border-slate-800">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-end"><button onclick="nextStep()"
+                                class="btn-primary px-6 py-2 rounded">Next Step</button></div>
+                    </div>
+
+                    <!-- Step 2: Embedding -->
+                    <div id="step-2" class="step-content absolute inset-0 flex flex-col hidden animate-[fadeIn_0.5s]">
+                        <div class="explainer-box">
+                            <h4 class="explainer-title">2. Vector Embeddings</h4>
+                            <p class="explainer-text">Translation of words into coordinates. Type a word to see its
+                                "semantic location" in 3 dimensions.</p>
+                        </div>
+                        <div class="grid grid-cols-2 gap-6 flex-1">
+                            <div class="glass-panel p-6 rounded-2xl flex flex-col justify-center gap-4">
+                                <input type="text" id="embed-input" placeholder="Type: Apple, Code, Cat..."
+                                    class="bg-slate-800 border border-slate-700 rounded p-3 text-white text-center text-xl"
+                                    onkeyup="updateEmbedding()">
+                                <div class="text-center text-2xl text-slate-600">↓</div>
+                                <div id="vector-output"
+                                    class="bg-black p-3 rounded font-mono text-xs text-green-400 break-all border border-green-900/50">
+                                </div>
+                            </div>
+                            <div class="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center gap-4">
+                                <h5 class="text-xs font-bold text-slate-500 uppercase">6-Dimensional Vector</h5>
+                                <div id="vector-values" class="grid grid-cols-3 gap-2 w-full">
+                                    <!-- Values injected by JS -->
+                                </div>
+                                <p class="text-[10px] text-slate-500 text-center mt-2">
+                                    * Real models use 768, 1024, or 4096 dimensions.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between"><button onclick="prevStep()"
+                                class="text-slate-400">Back</button><button onclick="nextStep()"
+                                class="btn-primary px-6 py-2 rounded">Next Step</button></div>
+                    </div>
+
+                    <!-- Step 3: Vector Search -->
+                    <div id="step-3" class="step-content absolute inset-0 flex flex-col hidden animate-[fadeIn_0.5s]">
+                        <div class="explainer-box">
+                            <h4 class="explainer-title">3. Semantic Search</h4>
+                            <p class="explainer-text">Drag the <strong>User Query</strong> node. It calculates Euclidean
+                                distance to find the nearest concept.</p>
+                        </div>
+                        <div class="glass-panel rounded-2xl flex-1 relative overflow-hidden border border-slate-700 cursor-crosshair"
+                            id="vector-space">
+                            <div class="absolute inset-0 opacity-20"
+                                style="background-image: linear-gradient(#334155 1px, transparent 1px), linear-gradient(90deg, #334155 1px, transparent 1px); background-size: 40px 40px;">
+                            </div>
+
+                            <!-- Knowledge Points (Injected by JS) -->
+                            <div id="knowledge-points-container"></div>
+
+                            <!-- Draggable User Query -->
+                            <div id="query-node"
+                                class="vector-point bg-blue-500 shadow-[0_0_15px_blue] z-10 flex items-center justify-center"
+                                style="top:50%;left:50%">
+                                <div
+                                    class="absolute -top-8 bg-blue-600 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap pointer-events-none">
+                                    Drag Me
+                                </div>
+                            </div>
+                            <svg class="absolute inset-0 pointer-events-none w-full h-full">
+                                <line id="nearest-line" stroke="#3b82f6" stroke-width="2" stroke-dasharray="5,5" />
+                            </svg>
+
+                            <div
+                                class="absolute bottom-4 left-4 bg-slate-900/90 p-3 rounded border border-slate-700 text-xs">
+                                <div class="text-slate-400">Nearest Concept:</div>
+                                <div id="nearest-label" class="font-bold text-white text-lg">--</div>
+                                <div id="nearest-dist" class="text-green-400 font-mono">Distance: --</div>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between"><button onclick="prevStep()"
+                                class="text-slate-400">Back</button><button onclick="nextStep()"
+                                class="btn-primary px-6 py-2 rounded">Next Step</button></div>
+                    </div>
+
+                    <!-- Step 4: Prediction -->
+                    <div id="step-4" class="step-content absolute inset-0 flex flex-col hidden animate-[fadeIn_0.5s]">
+                        <div class="explainer-box">
+                            <h4 class="explainer-title">4. Generation (Prediction)</h4>
+                            <p class="explainer-text">The LLM combines the query + retrieved context to generate an
+                                answer.</p>
+                        </div>
+                        <div
+                            class="glass-panel p-8 rounded-2xl border border-slate-700 flex-1 flex flex-col items-center justify-center gap-6">
+                            <div
+                                class="w-full bg-slate-900 p-4 rounded-lg border border-slate-800 text-xs text-slate-400">
+                                <span class="text-blue-400 font-bold">SYSTEM:</span> You are helpful.<br>
+                                <span class="text-green-400 font-bold">RETRIEVED CONTEXT:</span><br>
+                                <div id="pipeline-context" class="my-2">...</div>
+                                <span class="text-white font-bold">QUERY:</span> <span id="pipeline-query">...</span>
+                            </div>
+                            <div class="text-2xl text-slate-600">↓</div>
+                            <div
+                                class="w-full bg-gradient-to-r from-blue-900/20 to-purple-900/20 p-6 rounded-lg border border-blue-500/30 text-center">
+                                <span class="text-xs bg-blue-600 text-white px-2 py-1 rounded">AI OUTPUT</span>
+                                <p class="text-lg text-white font-mono mt-3" id="pipeline-output">...</p>
+                                <p class="text-[10px] text-slate-500 italic mt-4 border-t border-slate-700/50 pt-2"
+                                    id="pipeline-note">
+                                    <!-- Note about ignored contexts will go here -->
+                                </p>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-between"><button onclick="prevStep()"
+                                class="text-slate-400">Back</button><button onclick="nextStep()"
+                                class="btn-primary px-6 py-2 rounded">Next Step</button></div>
+                    </div>
+
+                    <!-- Step 5: Full Pipeline Summary -->
+                    <div id="step-5" class="step-content absolute inset-0 flex flex-col hidden animate-[fadeIn_0.5s]">
+                        <div class="explainer-box">
+                            <h4 class="explainer-title">5. The Full Pipeline</h4>
+                            <p class="explainer-text">See how data transforms from raw text to final answer in one view.
+                            </p>
+                        </div>
+                        <div
+                            class="glass-panel p-6 rounded-2xl border border-slate-700 flex-1 flex flex-col justify-center">
+                            <div
+                                class="flex items-center justify-between gap-2 text-center text-[10px] text-slate-400 uppercase font-bold mb-4">
+                                <div class="flex-1">Input</div>
+                                <i class="fas fa-arrow-right text-slate-600"></i>
+                                <div class="flex-1">Tokenize</div>
+                                <i class="fas fa-arrow-right text-slate-600"></i>
+                                <div class="flex-1">Embed</div>
+                                <i class="fas fa-arrow-right text-slate-600"></i>
+                                <div class="flex-1">Search</div>
+                                <i class="fas fa-arrow-right text-slate-600"></i>
+                                <div class="flex-1">Generate</div>
+                            </div>
+
+                            <div class="flex items-stretch justify-between gap-2 h-40">
+                                <!-- 1. Input -->
+                                <div
+                                    class="flex-1 bg-slate-900 p-2 rounded border border-slate-700 flex items-center justify-center">
+                                    <span class="text-white text-xs">"What is a Banana?"</span>
+                                </div>
+                                <!-- 2. Tokenize -->
+                                <div
+                                    class="flex-1 bg-slate-900 p-2 rounded border border-slate-700 flex flex-col items-center justify-center gap-1">
+                                    <span class="bg-blue-900/50 text-blue-200 px-1 rounded text-[10px]">What</span>
+                                    <span class="bg-purple-900/50 text-purple-200 px-1 rounded text-[10px]">is</span>
+                                    <span class="bg-blue-900/50 text-blue-200 px-1 rounded text-[10px]">a</span>
+                                    <span
+                                        class="bg-purple-900/50 text-purple-200 px-1 rounded text-[10px]">Banana</span>
+                                    <span class="bg-blue-900/50 text-blue-200 px-1 rounded text-[10px]">?</span>
+                                </div>
+                                <!-- 3. Embed -->
+                                <div
+                                    class="flex-1 bg-slate-900 p-2 rounded border border-slate-700 flex flex-col items-center justify-center font-mono text-[9px] text-green-400">
+                                    [0.91, 0.12, 0.88, 0.21, 0.05, 0.55]
+                                </div>
+                                <!-- 4. Search -->
+                                <div
+                                    class="flex-1 bg-slate-900 p-2 rounded border border-slate-700 flex flex-col items-center justify-center">
+                                    <div class="text-[9px] text-slate-500">Retrieved:</div>
+                                    <div class="text-green-400 font-bold text-xs mt-1">Banana</div>
+                                    <div class="text-[9px] text-slate-500">(Organic)</div>
+                                </div>
+                                <!-- 5. Generate -->
+                                <div
+                                    class="flex-1 bg-gradient-to-br from-blue-900/30 to-purple-900/30 p-2 rounded border border-blue-500/30 flex items-center justify-center text-center">
+                                    <span class="text-white text-xs">"A Banana is an Organic fruit."</span>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 text-center">
+                                <button onclick="resetPipeline()"
+                                    class="btn-primary px-8 py-3 rounded-full text-white font-bold shadow-lg shadow-blue-500/20">
+                                    <i class="fas fa-redo mr-2"></i> Restart Simulation
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-4 flex justify-start"><button onclick="prevStep()"
+                                class="text-slate-400">Back</button></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 2: QUANTIZATION LAB -->
+            <div id="content-quantization" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="explainer-box">
+                    <h4 class="explainer-title"><i class="fas fa-weight-hanging mr-2"></i>Concept: Weight Quantization
+                    </h4>
+                    <p class="explainer-text"><strong>Live Simulation:</strong> Adjust the slider to see how floating
+                        point numbers are rounded and memory usage drops. We calculate this for a standard 7B parameter
+                        model.</p>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="col-span-1 space-y-4">
+                        <div class="glass-panel p-6 rounded-xl">
+                            <label class="text-xs font-bold text-slate-500 uppercase block mb-3">Compression
+                                Level</label>
+                            <input type="range" id="quant-slider" min="0" max="3" step="1" value="0"
+                                class="w-full accent-blue-500" oninput="updateQuantization(this.value)">
+                            <div class="flex justify-between text-xs mt-2 font-mono text-slate-400">
+                                <span>FP32</span><span>FP16</span><span>INT8</span><span>INT4</span>
+                            </div>
+                        </div>
+                        <div class="glass-panel p-6 rounded-xl space-y-4">
+                            <div>
+                                <div class="text-xs text-slate-500 uppercase">Model Size</div>
+                                <div class="text-2xl font-bold text-white" id="q-size">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 uppercase">RAM Required</div>
+                                <div class="text-2xl font-bold text-white" id="q-ram">--</div>
+                            </div>
+                            <div>
+                                <div class="text-xs text-slate-500 uppercase">Loss</div>
+                                <div class="text-2xl font-bold text-green-400" id="q-loss">--</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-span-2 glass-panel p-6 rounded-xl">
+                        <h3 class="text-sm font-bold text-white mb-4">Weight Matrix Visualization</h3>
+                        <div class="matrix-grid" id="weight-matrix"></div>
+                        <div class="mt-6 flex items-center gap-3 p-3 bg-slate-800/50 rounded border border-slate-700">
+                            <i class="fas fa-laptop-code text-blue-400 text-xl"></i>
+                            <div>
+                                <div class="font-bold text-slate-200 text-xs uppercase">Hardware Check</div>
+                                <div class="text-sm text-slate-400" id="q-hw">--</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 3: LLM BASICS -->
+            <div id="content-llm" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="explainer-box">
+                    <h4 class="explainer-title"><i class="fas fa-brain mr-2"></i>Concept: Next Token Prediction</h4>
+                    <p class="explainer-text">This module uses a Bigram (look-back) model. Type a word like "the",
+                        "hello", "artificial", "data" to see probabilities.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="glass-panel p-6 rounded-xl">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Input Word</label>
+                        <input type="text" id="llm-input" value="The"
+                            class="w-full bg-slate-800 border border-slate-700 rounded p-3 text-white mt-2 mb-4">
+                        <label class="text-xs font-bold text-slate-500 uppercase">Temperature: <span id="temp-val"
+                                class="text-white">0.7</span></label>
+                        <input type="range" id="llm-temp" min="0" max="1" step="0.1" value="0.7"
+                            class="w-full accent-blue-500 mt-2"
+                            oninput="document.getElementById('temp-val').innerText=this.value">
+                        <button onclick="runLLM()"
+                            class="btn-primary w-full py-3 rounded mt-6 font-bold text-white">Predict Next
+                            Token</button>
+                    </div>
+                    <div class="glass-panel p-6 rounded-xl flex flex-col">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase mb-4">Top Candidates</h4>
+                        <div id="llm-bars" class="space-y-3 flex-1"></div>
+                        <div id="llm-selected"
+                            class="mt-4 pt-4 border-t border-slate-700 text-center font-bold text-xl text-green-400">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 4: INFERENCE -->
+            <div id="content-inference" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="explainer-box">
+                    <h4 class="explainer-title"><i class="fas fa-microchip mr-2"></i>Concept: Inference Engines</h4>
+                    <p class="explainer-text">Simulates actual generation delay based on character count and engine
+                        choice.</p>
+                </div>
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="grid grid-cols-3 gap-4 mb-6">
+                        <label
+                            class="cursor-pointer bg-slate-800/50 p-4 rounded border border-slate-700 hover:border-blue-500">
+                            <input type="radio" name="engine" value="cpu" checked class="accent-blue-500">
+                            <div class="font-bold text-white mt-2">Standard CPU</div>
+                            <div class="text-[10px] text-slate-400">10 tokens/sec</div>
+                        </label>
+                        <label
+                            class="cursor-pointer bg-slate-800/50 p-4 rounded border border-slate-700 hover:border-blue-500">
+                            <input type="radio" name="engine" value="llama" class="accent-blue-500">
+                            <div class="font-bold text-white mt-2">llama.cpp</div>
+                            <div class="text-[10px] text-slate-400">40 tokens/sec</div>
+                        </label>
+                        <label
+                            class="cursor-pointer bg-slate-800/50 p-4 rounded border border-slate-700 hover:border-blue-500">
+                            <input type="radio" name="engine" value="vllm" class="accent-blue-500">
+                            <div class="font-bold text-white mt-2">vLLM (GPU)</div>
+                            <div class="text-[10px] text-slate-400">100+ tokens/sec</div>
+                        </label>
+                    </div>
+                    <textarea id="inf-prompt"
+                        class="w-full bg-slate-900 text-slate-300 p-2 mb-4 rounded border border-slate-700"
+                        rows="3">Write a short poem about coding in space.</textarea>
+                    <button onclick="runInference()"
+                        class="btn-primary w-full py-2 rounded text-white font-bold">Generate</button>
+                    <div class="mt-6 bg-black p-4 rounded font-mono text-green-400 h-32 overflow-auto whitespace-pre-wrap leading-relaxed"
+                        id="inf-console"></div>
+                    <div class="flex justify-between mt-4 text-center">
+                        <div>
+                            <div class="text-xs text-slate-500">Actual Speed</div>
+                            <div id="inf-speed" class="text-xl font-bold text-white">--</div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-slate-500">Time</div>
+                            <div id="inf-time" class="text-xl font-bold text-white">--</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 5: OCR -->
+            <div id="content-ocr" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="explainer-box">
+                    <h4 class="explainer-title"><i class="fas fa-eye mr-2"></i>Concept: Multimodal Vision</h4>
+                    <p class="explainer-text">The scanner below reads the <strong>actual HTML DOM content</strong> of
+                        the visualized document.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-8">
+                    <div class="glass-panel p-8 flex items-center justify-center bg-slate-900 relative">
+                        <select id="doc-selector"
+                            class="absolute top-2 left-2 bg-slate-800 text-white text-xs p-2 rounded z-10"
+                            onchange="updateDocVisual()">
+                            <option value="invoice">Invoice</option>
+                            <option value="idcard">ID Card</option>
+                            <option value="note">Messy Note</option>
+                        </select>
+                        <div id="doc-visual"
+                            class="bg-white text-black p-4 shadow-xl w-48 h-60 text-[10px] relative border border-gray-300 transition-all duration-500 overflow-hidden">
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-4">
+                        <select id="ocr-mode" class="bg-slate-800 border border-slate-700 text-white p-3 rounded">
+                            <option value="legacy">Legacy OCR (Raw Text)</option>
+                            <option value="vision">Vision Model (JSON)</option>
+                        </select>
+                        <button onclick="runOCR()" class="btn-primary py-2 rounded text-white font-bold">Scan
+                            Document</button>
+                        <pre id="ocr-output"
+                            class="bg-black p-4 rounded text-xs text-green-400 font-mono h-40 overflow-auto border border-slate-700"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 6: RAG -->
+            <div id="content-rag" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="explainer-box">
+                    <h4 class="explainer-title"><i class="fas fa-database mr-2"></i>Concept: RAG Memory</h4>
+                    <p class="explainer-text">This search uses <strong>Cosine Similarity</strong> logic. It compares
+                        your query words against the knowledge base key terms.</p>
+                </div>
+                <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 mb-4 flex gap-4 items-center">
+                    <label class="text-xs font-bold text-slate-400 uppercase">User Query:</label>
+                    <input type="text" id="rag-query-input" value="How long does the battery last?"
+                        class="flex-1 bg-slate-900 text-white px-3 py-2 rounded border border-slate-600 focus:border-blue-500 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-6 h-96">
+                    <div class="glass-panel p-6 flex flex-col">
+                        <h5 class="text-slate-400 text-xs font-bold uppercase mb-2">1. Knowledge Base</h5>
+                        <div class="space-y-2 flex-1 overflow-auto" id="kb-list"></div>
+                        <button onclick="runRAGSearch()"
+                            class="btn-primary py-2 rounded text-white mt-2 text-xs">Retrieve Matches</button>
+                    </div>
+                    <div class="glass-panel p-6 flex flex-col relative">
+                        <h5 class="text-slate-400 text-xs font-bold uppercase mb-2">2. LLM Generation</h5>
+                        <div id="rag-context"
+                            class="bg-black p-3 rounded font-mono text-[10px] text-slate-500 flex-1 border border-slate-800 overflow-auto whitespace-pre-wrap">
+                        </div>
+                        <button onclick="runRAGGen()" id="rag-gen-btn" disabled
+                            class="bg-slate-700 text-slate-400 py-2 rounded mt-2 text-xs transition-colors">Generate
+                            Answer</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 7: MCP -->
+            <div id="content-mcp" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="explainer-box">
+                    <h4 class="explainer-title"><i class="fas fa-plug mr-2"></i>Concept: Model Context Protocol (MCP)
+                    </h4>
+                    <p class="explainer-text">Type a command containing "weather", "email", or "db" to see the router
+                        call the appropriate tool.</p>
+                </div>
+                <div class="glass-panel p-6 rounded-xl">
+                    <div class="flex gap-4 mb-6">
+                        <input type="text" id="mcp-input" placeholder="e.g., Check the weather in London"
+                            class="bg-slate-800 text-white p-2 rounded flex-1 border border-slate-700">
+                        <button onclick="runMCP()"
+                            class="btn-primary px-6 rounded text-white font-bold">Execute</button>
+                    </div>
+                    <div class="space-y-2 font-mono text-xs">
+                        <div class="flex items-center gap-3 opacity-0 transition-opacity duration-500" id="mcp-1">
+                            <div class="w-6 h-6 rounded bg-purple-600 flex items-center justify-center text-white"><i
+                                    class="fas fa-brain"></i></div>
+                            <div class="bg-slate-800 p-2 rounded text-purple-300 flex-1">Router: <span
+                                    id="mcp-thought">...</span></div>
+                        </div>
+                        <div class="flex items-center gap-3 opacity-0 transition-opacity duration-500" id="mcp-2">
+                            <div class="w-6 h-6 rounded bg-blue-600 flex items-center justify-center text-white"><i
+                                    class="fas fa-terminal"></i></div>
+                            <div class="bg-black p-2 rounded text-blue-300 flex-1 border border-blue-900">EXEC: <span
+                                    id="mcp-tool">...</span></div>
+                        </div>
+                        <div class="flex items-center gap-3 opacity-0 transition-opacity duration-500" id="mcp-3">
+                            <div class="w-6 h-6 rounded bg-green-600 flex items-center justify-center text-white"><i
+                                    class="fas fa-comment"></i></div>
+                            <div class="bg-slate-800 p-2 rounded text-white flex-1" id="mcp-final">...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 8: PROMPT ENGINEERING -->
+            <div id="content-chat" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="explainer-box">
+                    <h4 class="explainer-title"><i class="fas fa-comments mr-2"></i>Concept: Prompt Engineering</h4>
+                    <p class="explainer-text">The response is generated by applying the System Prompt rules to your
+                        input.</p>
+                </div>
+                <div class="grid grid-cols-3 gap-6 h-80">
+                    <div class="glass-panel p-4 flex flex-col gap-2">
+                        <label class="text-xs font-bold text-slate-500">Select Persona</label>
+                        <button onclick="setPersona('assistant')"
+                            class="text-left p-3 rounded bg-slate-800 hover:bg-slate-700 text-blue-400 text-xs font-bold border border-transparent hover:border-blue-500 transition-all">Helpful
+                            Assistant</button>
+                        <button onclick="setPersona('pirate')"
+                            class="text-left p-3 rounded bg-slate-800 hover:bg-slate-700 text-red-400 text-xs font-bold border border-transparent hover:border-red-500 transition-all">Space
+                            Pirate</button>
+                        <button onclick="setPersona('robot')"
+                            class="text-left p-3 rounded bg-slate-800 hover:bg-slate-700 text-green-400 text-xs font-bold border border-transparent hover:border-green-500 transition-all">JSON
+                            Bot</button>
+                        <button onclick="setPersona('therapy')"
+                            class="text-left p-3 rounded bg-slate-800 hover:bg-slate-700 text-purple-400 text-xs font-bold border border-transparent hover:border-purple-500 transition-all">Mental
+                            Health Aid</button>
+                    </div>
+                    <div class="col-span-2 glass-panel flex flex-col overflow-hidden">
+                        <div class="bg-black p-2 text-[10px] text-slate-500 font-mono border-b border-slate-800">SYSTEM:
+                            <span id="sys-prompt" class="text-slate-300 italic">"You are a helpful assistant."</span>
+                        </div>
+                        <div id="chat-history" class="flex-1 p-4 overflow-y-auto space-y-3"></div>
+                        <div class="p-3 border-t border-slate-800 flex gap-2">
+                            <input type="text" id="chat-input"
+                                class="flex-1 bg-slate-900 border border-slate-700 rounded px-3 text-xs text-white"
+                                value="Hello!">
+                            <button onclick="sendChat()"
+                                class="btn-primary px-4 rounded text-white text-xs font-bold">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODULE 9: INFRASTRUCTURE -->
+            <div id="content-host" class="hidden space-y-6 max-w-4xl mx-auto">
+                <div class="explainer-box">
+                    <h4 class="explainer-title"><i class="fas fa-server mr-2"></i>Concept: Infrastructure</h4>
+                    <p class="explainer-text">Compare running on your own metal vs renting cloud GPUs.</p>
+                </div>
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="glass-panel p-8 text-center border-green-500/30 border">
+                        <i class="fas fa-home text-4xl text-green-500 mb-4"></i>
+                        <h3 class="text-xl font-bold text-white">Localhost</h3>
+                        <p class="text-xs text-slate-400 mb-2">Your Machine</p>
+                        <ul class="text-[10px] text-slate-500 mb-6 text-left list-disc pl-8 space-y-1">
+                            <li>Privacy: 100%</li>
+                            <li>Cost: $0 / token</li>
+                            <li>Speed: Depends on GPU</li>
+                        </ul>
+                        <div id="lat-local" class="text-3xl font-mono font-bold text-white">-- ms</div>
+                        <div class="text-[10px] text-green-400 mt-2">SECURE</div>
+                    </div>
+                    <div class="glass-panel p-8 text-center border-red-500/30 border">
+                        <i class="fas fa-cloud text-4xl text-red-500 mb-4"></i>
+                        <h3 class="text-xl font-bold text-white">Cloud API</h3>
+                        <p class="text-xs text-slate-400 mb-2">External Server</p>
+                        <ul class="text-[10px] text-slate-500 mb-6 text-left list-disc pl-8 space-y-1">
+                            <li>Privacy: Subject to ToS</li>
+                            <li>Cost: ~$10 / 1M tokens</li>
+                            <li>Speed: Very Fast</li>
+                        </ul>
+                        <div id="lat-cloud" class="text-3xl font-mono font-bold text-slate-500">-- ms</div>
+                        <div class="text-[10px] text-red-400 mt-2">PUBLIC</div>
+                    </div>
+                </div>
+                <button onclick="runPing()"
+                    class="btn-primary w-full py-3 rounded text-white font-bold text-lg mt-4">Run Latency Test</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ================================================================== -->
+    <!-- JAVASCRIPT LOGIC (ANTIGRAVITY CORE) -->
+    <!-- ================================================================== -->
+    <script src="script.js"></script>
+</body>
+
+</html>
