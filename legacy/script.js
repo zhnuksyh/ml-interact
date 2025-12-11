@@ -1,18 +1,40 @@
 // --- 1. CORE DATA & UTILITIES ---
 
-// Vocabulary for embedding simulation (6 dimensions)
+// Semantic Vocabulary (6 dimensions)
+// Dims: [Tech, Organic, Space, Abstract, Action, Positive]
 const vocab = {
-    "fruit": [0.9, 0.1, 0.8, 0.2, 0.0, 0.5],
-    "tech": [0.1, 0.9, 0.1, 0.8, 0.9, 0.2],
-    "animal": [0.8, 0.1, 0.9, 0.1, 0.2, 0.6],
-    "apple": [0.95, 0.2, 0.7, 0.3, 0.1, 0.4],
-    "server": [0.1, 0.95, 0.1, 0.9, 0.8, 0.1],
-    "cat": [0.85, 0.1, 0.95, 0.2, 0.3, 0.7],
-    "banana": [0.9, 0.1, 0.7, 0.2, 0.1, 0.5],
-    "code": [0.1, 0.9, 0.1, 0.9, 0.9, 0.1],
-    "dog": [0.8, 0.1, 0.9, 0.1, 0.4, 0.6],
+    // Tech Cluster
+    "computer": [0.9, 0.1, 0.2, 0.8, 0.5, 0.5],
+    "server": [0.95, 0.1, 0.1, 0.7, 0.6, 0.5],
+    "code": [0.8, 0.1, 0.3, 0.9, 0.7, 0.5],
+    "linux": [0.9, 0.1, 0.1, 0.8, 0.5, 0.6],
+    "ai": [0.9, 0.1, 0.4, 0.9, 0.8, 0.6],
+
+    // Organic/Food Cluster
+    "apple": [0.1, 0.9, 0.1, 0.1, 0.2, 0.7],
+    "banana": [0.1, 0.95, 0.1, 0.1, 0.1, 0.8],
+    "fruit": [0.1, 0.9, 0.1, 0.3, 0.1, 0.6],
+    "lunch": [0.2, 0.8, 0.1, 0.4, 0.5, 0.9],
+
+    // Space Cluster
+    "star": [0.3, 0.1, 0.9, 0.6, 0.2, 0.8],
+    "planet": [0.2, 0.4, 0.9, 0.5, 0.1, 0.7],
+    "rocket": [0.8, 0.1, 0.9, 0.2, 0.9, 0.6],
+    "mars": [0.4, 0.2, 0.95, 0.3, 0.1, 0.5],
+
+    // General
+    "king": [0.2, 0.6, 0.1, 0.5, 0.8, 0.7],
+    "man": [0.2, 0.7, 0.1, 0.4, 0.6, 0.5],
+    "woman": [0.2, 0.7, 0.1, 0.4, 0.6, 0.5], // Intentionally close to man
+    "queen": [0.2, 0.6, 0.1, 0.5, 0.8, 0.8], // Intentionally close to king
+
     "default": [0.5, 0.5, 0.5, 0.5, 0.5, 0.5]
 };
+
+// Heuristic Subword Dictionary (Mock BPE)
+const subwords = [
+    "ing", "ed", "tion", "ness", "ment", "pre", "un", "re", "inter", "anti", "geo", "bio", "tech"
+];
 
 // Bigram model for next-token prediction
 const bigram = {
@@ -32,11 +54,31 @@ const ragDB = [
     { id: 4, text: "Warning: Do not submerge in water.", tags: ["water", "warning", "danger"] }
 ];
 
-// Utility: Generate fake embedding for unknown words
+// Utility: Cosine Similarity
+function cosineSimilarity(vecA, vecB) {
+    if (!vecA || !vecB) return 0;
+    const dotProduct = vecA.reduce((sum, a, i) => sum + a * vecB[i], 0);
+    const snA = Math.sqrt(vecA.reduce((sum, a) => sum + a * a, 0));
+    const snB = Math.sqrt(vecB.reduce((sum, b) => sum + b * b, 0));
+    if (snA === 0 || snB === 0) return 0;
+    return dotProduct / (snA * snB);
+}
+
+// Utility: Semantic Embedding Generation
 function getEmbedding(word) {
-    word = word.toLowerCase();
+    word = word.toLowerCase().replace(/[^a-z]/g, '');
+    if (!word) return vocab['default'];
     if (vocab[word]) return vocab[word];
-    // Deterministic hash based on character codes to generate 6 dimensions
+
+    // Fallback: Check for similar known words to "fake" semantic closeness
+    for (let key in vocab) {
+        if (word.includes(key) || key.includes(word)) {
+            // Return vector with slight noise
+            return vocab[key].map(v => v + (Math.random() * 0.1 - 0.05));
+        }
+    }
+
+    // Deterministic hash for unknown words (Simulation fallback)
     let val = 0; for (let i = 0; i < word.length; i++) val += word.charCodeAt(i);
     return [
         (val % 100) / 100,
@@ -155,13 +197,52 @@ function updateTokenization() {
 
     let tokens = [];
 
-    // Simulation of different tokenizers
+    // Simulation of Tokenization (BPE-like Heuristic)
     if (model === 'gpt4o' || model === 'claude35' || model === 'gemini15') {
-        // Standard BPE-like behavior for commercial models
-        // Heuristic: Split by space and punctuation, keep punctuation separate
-        tokens = text.match(/[\w]+|[^\s\w]/g) || [];
+        // Advanced: Split by subwords using heuristic list
+        const words = text.split(/(\s+)/); // preserve spaces
+
+        words.forEach(w => {
+            if (!w.trim()) { tokens.push(w); return; } // spaces
+
+            let remaining = w;
+            let matched = false;
+
+            // Try to peel off prefixes/suffixes
+            while (remaining.length > 0) {
+                matched = false;
+                // Check if starts with a known subword (greedy)
+                for (let sub of subwords) {
+                    if (remaining.toLowerCase().startsWith(sub) && remaining.length > sub.length) {
+                        tokens.push(remaining.substring(0, sub.length));
+                        remaining = remaining.substring(sub.length);
+                        matched = true;
+                        break;
+                    }
+                }
+                if (!matched) {
+                    // Check suffixes
+                    for (let sub of subwords) {
+                        if (remaining.toLowerCase().endsWith(sub) && remaining.length > sub.length) {
+                            const stem = remaining.substring(0, remaining.length - sub.length);
+                            tokens.push(stem);
+                            tokens.push(sub);
+                            remaining = "";
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!matched) {
+                    tokens.push(remaining);
+                    remaining = "";
+                }
+            }
+        });
+
     } else {
-        // Llama/Open Source style
+        // Llama/Simple: Split by space + punctuation
         tokens = text.split(/(\s+)/).filter(x => x).map(t => t.replace(' ', ' '));
         tokens.unshift("<s>");
     }
@@ -180,7 +261,7 @@ function updateTokenization() {
     });
 
     display.innerHTML = html;
-    countEl.innerText = tokens.length;
+    countEl.innerText = tokens.filter(t => t.trim()).length;
 
     // Calculate Cost (Input only for this view)
     const cost = (tokens.length / 1000000) * info.in;
@@ -191,17 +272,28 @@ function updateTokenization() {
 function updateEmbedding() {
     const word = document.getElementById('embed-input').value;
     const vec = getEmbedding(word);
-    const labels = ["Organic", "Tech", "Intensity", "Abstract", "Physical", "Emotion"];
+    const labels = ["Tech", "Org", "Space", "Abst", "Act", "Pos"];
+    const desc = [
+        "Technical vs Non-technical context",
+        "Organic/Living vs Artificial",
+        "Cosmic/Physical Scale",
+        "Abstract Concepts vs Concrete Objects",
+        "Action/Verb intensity",
+        "Positive vs Negative Sentiment"
+    ];
 
     const container = document.getElementById('vector-values');
     container.innerHTML = vec.map((v, i) => `
-        <div class="bg-slate-900 p-2 rounded border border-slate-700 text-center">
-            <div class="text-[9px] text-slate-500 mb-1 uppercase tracking-wider">${labels[i]}</div>
-            <div class="font-mono text-blue-400 font-bold text-xs">${v.toFixed(3)}</div>
+        <div class="tooltip-container bg-slate-900 p-2 rounded border border-slate-700 text-center hover:bg-slate-800 transition-colors">
+            <span class="tooltip-text">${desc[i]}</span>
+            <div class="text-xs text-slate-500 mb-1 uppercase tracking-wider font-bold">${labels[i]}</div>
+            <div class="text-blue-400 font-bold text-xs font-mono">${v.toFixed(3)}</div>
         </div>
     `).join('');
 
-    document.getElementById('vector-output').innerText = `[${vec.map(v => v.toFixed(3)).join(', ')}]`;
+    // Ensure output is strictly centered text
+    const outEl = document.getElementById('vector-output');
+    if (outEl) outEl.innerText = `[${vec.map(v => v.toFixed(3)).join(', ')}]`;
 }
 
 // Pipeline Step 3: Vector Dragging Logic
@@ -213,10 +305,14 @@ function initVectorDrag() {
     const distLabel = document.getElementById('nearest-dist');
     const ptsContainer = document.getElementById('knowledge-points-container');
 
-    // Define static knowledge points
+    // Define static knowledge points with semantically placed coordinates (2D Projection)
     const points = [
-        { x: 0.2, y: 0.2, n: 'Banana', c: 'Organic' }, { x: 0.8, y: 0.8, n: 'Laptop', c: 'Tech' }, { x: 0.5, y: 0.5, n: 'Table', c: 'Object' },
-        { x: 0.3, y: 0.8, n: 'Phone', c: 'Tech' }, { x: 0.7, y: 0.2, n: 'Apple', c: 'Organic' }, { x: 0.9, y: 0.4, n: 'Server', c: 'Tech' }
+        { x: 0.2, y: 0.2, n: 'Banana', c: 'Organic' },
+        { x: 0.8, y: 0.2, n: 'Server', c: 'Tech' },
+        { x: 0.5, y: 0.8, n: 'Rocket', c: 'Space' },
+        { x: 0.3, y: 0.5, n: 'Apple', c: 'Organic' }, // Close to Banana
+        { x: 0.7, y: 0.3, n: 'Laptop', c: 'Tech' },   // Close to Server
+        { x: 0.6, y: 0.9, n: 'Mars', c: 'Space' }     // Close to Rocket
     ];
 
     // Render static points
@@ -283,7 +379,7 @@ function runPipelinePred() {
     let contextHtml = '';
     contexts.forEach(c => {
         const color = c.rel === "High" ? "text-green-400 border-green-900" : "text-slate-600 border-slate-800 opacity-50";
-        contextHtml += `<div class="border p-2 rounded mb-1 ${color} text-[10px]">
+        contextHtml += `<div class="border p-2 rounded mb-1 ${color} text-xs">
             <span class="font-bold">[${c.rel} Relevance]</span> ${c.text}
         </div>`;
     });
@@ -402,7 +498,7 @@ function updateDocVisual() {
     // Render different HTML content based on selection
     if (type === 'invoice') visual.innerHTML = `<h3 class="font-bold border-b border-black">INVOICE #99</h3><p>Item: Jetpack</p><p>Cost: $9000</p>`;
     else if (type === 'idcard') visual.innerHTML = `<div class="bg-blue-100 p-1 font-bold">ID</div><p>Name: Alice</p><p>Role: Pilot</p>`;
-    else visual.innerHTML = `<div class="font-[cursive] text-lg">Don't forget<br>to feed the<br>AI model!</div>`;
+    else visual.innerHTML = `<div class="text-lg">Don't forget<br>to feed the<br>AI model!</div>`;
 }
 
 function runOCR() {
@@ -429,6 +525,20 @@ function runOCR() {
 // --- 8. RAG LOGIC ---
 function renderKB() {
     // Render the database items
+    // First, assign vectors to them if not exists (Lazy Load)
+    if (!ragDB[0].vector) {
+        ragDB.forEach(i => {
+            // Create a composite vector from tags
+            let diff = [0, 0, 0, 0, 0, 0];
+            i.tags.forEach(t => {
+                const tv = getEmbedding(t);
+                diff = diff.map((v, k) => v + tv[k]);
+            });
+            // Normalize roughly
+            i.vector = diff.map(v => v / i.tags.length);
+        });
+    }
+
     document.getElementById('kb-list').innerHTML = ragDB.map(i =>
         `<div class="bg-slate-800 p-2 rounded text-xs text-slate-300 border border-slate-700 mb-2">
                     <span class="text-blue-400 font-bold">[${i.id}]</span> ${i.text}
@@ -437,19 +547,28 @@ function renderKB() {
 }
 
 function runRAGSearch() {
-    const query = document.getElementById('rag-query-input').value.toLowerCase();
-    let best = null, maxScore = 0;
+    const query = document.getElementById('rag-query-input').value;
+    // Basic search simulation: Get embedding of the last key word to simulate "semantic focus"
+    // In a real app we'd embed the whole sentence, but here we scan for subject words
+    const words = query.split(' ');
+    let qVec = getEmbedding(words[words.length - 1]); // Default to last word
 
-    // Simple Keyword Overlap Search
+    // Better heuristic: find the longest word (often the subject)
+    const subject = words.reduce((a, b) => a.length > b.length ? a : b);
+    qVec = getEmbedding(subject);
+
+    let best = null, maxScore = -1;
+
+    // Cosine Similarity Search
     ragDB.forEach(chunk => {
-        let score = 0;
-        chunk.tags.forEach(tag => { if (query.includes(tag)) score++; });
+        const score = cosineSimilarity(qVec, chunk.vector);
         if (score > maxScore) { maxScore = score; best = chunk; }
     });
 
     const ctx = document.getElementById('rag-context');
-    if (best && maxScore > 0) {
-        ctx.innerHTML = `<span class="text-green-400">MATCH FOUND (Score ${maxScore}):</span>\n"${best.text}"`;
+    // Threshold for match (arbitrary for sim)
+    if (best && maxScore > 0.6) {
+        ctx.innerHTML = `<span class="text-green-400">SEMANTIC MATCH (Score ${maxScore.toFixed(3)}):</span>\n"${best.text}"`;
         localStorage.setItem('rag-best', best.text);
 
         // Enable Generation Button
@@ -458,7 +577,7 @@ function runRAGSearch() {
         btn.classList.replace('bg-slate-700', 'btn-primary');
         btn.classList.replace('text-slate-400', 'text-white');
     } else {
-        ctx.innerHTML = `<span class="text-red-400">NO MATCH FOUND.</span>`;
+        ctx.innerHTML = `<span class="text-red-400">NO MATCH FOUND (Max Score: ${maxScore.toFixed(3)}).</span>\nTry words like 'power' or 'food'.`;
     }
 }
 
@@ -537,9 +656,15 @@ function runPing() {
 }
 
 // --- INITIALIZATION ---
-// Run startup routines to populate UI
-updateChunking();
-updateEmbedding();
-updateDocVisual();
-initVectorDrag();
-setPersona('assistant');
+document.addEventListener('DOMContentLoaded', () => {
+    // Run startup routines to populate UI
+    try {
+        updateChunking();
+        updateEmbedding();
+        updateDocVisual();
+        initVectorDrag();
+        setPersona('assistant');
+    } catch (e) {
+        console.error("Initialization error:", e);
+    }
+});
