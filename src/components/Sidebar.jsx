@@ -1,8 +1,9 @@
-import { Atom, Columns, Cuboid, Database, MessageSquare, Cpu, Scan, Globe } from 'lucide-react';
+import { Atom, Columns, Cuboid, Database, MessageSquare, Cpu, Scan, Globe, Home } from 'lucide-react';
 import clsx from 'clsx';
 
 export default function Sidebar({ activeTab, onSwitch }) {
     const menu = [
+        { id: 'home', icon: Home, label: 'Overview' },
         { id: 'chunking', icon: Columns, label: 'Chunking' },
         { id: 'embedding', icon: Cuboid, label: 'Embeddings' },
         { id: 'rag', icon: Database, label: 'Vector Search' },

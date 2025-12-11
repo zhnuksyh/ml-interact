@@ -8,7 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist -m 'Deploy: Build update from main branch 🚀'"
   },
   "dependencies": {
     "clsx": "^2.1.1",

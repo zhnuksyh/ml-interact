@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Sidebar from './components/Sidebar';
 
 // Module Imports
+import HomeModule from './modules/HomeModule';
 import ChunkingModule from './modules/ChunkingModule';
 import EmbeddingModule from './modules/EmbeddingModule';
 import RAGModule from './modules/RAGModule';
@@ -12,11 +13,25 @@ import InferenceModule from './modules/InferenceModule';
 import OCRModule from './modules/OCRModule';
 import MCPModule from './modules/MCPModule';
 
+const TITLE_MAP = {
+  'home': 'Overview',
+  'chunking': 'Chunking',
+  'embedding': 'Embeddings',
+  'rag': 'Vector Search',
+  'quantization': 'Quantization',
+  'pipeline': 'Full Pipeline',
+  'llm': 'LLM Basics',
+  'inference': 'Inference',
+  'ocr': 'Vision / OCR',
+  'mcp': 'MCP / Tools'
+};
+
 export default function App() {
-  const [activeTab, setActiveTab] = useState('chunking');
+  const [activeTab, setActiveTab] = useState('home');
 
   const renderModule = () => {
     switch (activeTab) {
+      case 'home': return <HomeModule onNavigate={setActiveTab} />;
       case 'chunking': return <ChunkingModule />;
       case 'embedding': return <EmbeddingModule />;
       case 'rag': return <RAGModule />;
@@ -26,7 +41,7 @@ export default function App() {
       case 'inference': return <InferenceModule />;
       case 'ocr': return <OCRModule />;
       case 'mcp': return <MCPModule />;
-      default: return <ChunkingModule />;
+      default: return <HomeModule onNavigate={setActiveTab} />;
     }
   };
 
@@ -37,10 +52,8 @@ export default function App() {
       <main className="flex-1 flex flex-col relative overflow-hidden">
         {/* Top Header */}
         <div className="h-16 border-b border-slate-800 flex items-center px-6 bg-[#0b0f19]/80 backdrop-blur">
-          <h2 className="text-xl font-bold text-white capitalize flex items-center gap-3">
-            {activeTab.replace('-', ' ')}
-            {activeTab === 'rag' && " (Vector Search)"}
-            {activeTab === 'mcp' && " (Tool Use)"}
+          <h2 className="text-xl font-bold text-white flex items-center gap-3">
+            {TITLE_MAP[activeTab] || 'Overview'}
           </h2>
         </div>
 

@@ -109,7 +109,7 @@ export default function ChunkingModule() {
     };
 
     return (
-        <div className="flex flex-col gap-6 animate-in fade-in zoom-in duration-300">
+        <div className="flex flex-col gap-6 animate-fade-in animate-zoom-in">
             {/* ... (Explainer + Inputs skipped for brevity, keeping existing structure) ... */}
 
             <div className="explainer-box">
@@ -252,14 +252,18 @@ export default function ChunkingModule() {
                 <h4 className="text-sm font-bold text-white mb-3">Document Chunks</h4>
                 <div className="space-y-2">
                     {(isExpanded ? chunks : chunks.slice(0, 5)).map((chunk, i) => (
-                        <div key={i} className="flex gap-3">
+                        <div
+                            key={i}
+                            className="flex gap-3 animate-pop-in opacity-0 fill-mode-forwards"
+                            style={{ animationDelay: `${i * 0.1}s` }}
+                        >
                             <div className="w-8 shrink-0 flex flex-col items-center pt-1">
                                 <div className="w-6 h-6 shrink-0 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-500">
                                     {i + 1}
                                 </div>
                                 {i < chunks.length - 1 && <div className="w-[1px] h-full bg-slate-800 my-1"></div>}
                             </div>
-                            <div className={clsx("flex-1 p-3 rounded border text-sm", `chunk-${i % 4}`)}>
+                            <div className={clsx("flex-1 p-3 rounded border text-sm transition-all hover:scale-[1.01] hover:shadow-lg", `chunk-${i % 4}`)}>
                                 {chunk}
                             </div>
                         </div>

@@ -172,11 +172,69 @@ export const ragDB = [
 ];
 
 // Bigram Model for LLM Module
-export const bigram = {
-    "the": ["quick", "artificial", "future", "data"],
-    "artificial": ["intelligence", "neural", "reality"],
-    "hello": ["world", "user", "there"],
-    "data": ["base", "science", "privacy"],
+// Tiny Chain for Autoregressive Simulation
+export const tinyLLM = {
+    "the": ["quick", "future", "world", "model"],
     "quick": ["brown", "response", "fix"],
-    "brown": ["fox", "box", "note"]
+    "brown": ["fox", "dog"],
+    "fox": ["jumps", "runs", "sleeps"],
+    "jumps": ["over", "high"],
+    "over": ["the", "lazy"],
+    "lazy": ["dog", "cat"],
+    "dog": [".", "barks"],
+
+    "artificial": ["intelligence", "neural", "reality"],
+    "intelligence": ["is", "will", "can"],
+    "is": ["transforming", "the", "a", "learning"],
+    "transforming": ["the", "industries", "everything"],
+    "future": ["of", "is", "bright"],
+    "of": ["data", "ai", "computing"],
+    "data": ["science", "base", "privacy"],
+    "science": ["is", "and", "rules"],
+
+    "hello": ["world", "user", "there"],
+    "world": ["is", "of", "wide"],
+
+    "large": ["language", "data", "scale"],
+    "language": ["models", "processing", "understanding"],
+    "models": ["are", "predict", "learn"],
+    "predict": ["the", "next", "tokens"],
+    "next": ["token", "word", "step"],
+    "token": ["predictions", "generation", "."],
+    ".": ["STOP"] // End token
 };
+
+// Bad Data Model (Garbage In, Garbage Out)
+export const garbageLLM = {
+    "the": ["thing", "uhh", "potato", "noise"],
+    "quick": ["slow", "blue", "cheese"],
+    "brown": ["paint", "liquid", "????"],
+    "fox": ["alien", "box", "car"],
+    "jumps": ["down", "left", "sideways"],
+    "over": ["under", "through", "nothing"],
+    "lazy": ["person", "wall", "blob"],
+    "dog": ["cat", "fish", "rock"],
+
+    "artificial": ["flavoring", "fake", "plastic"],
+    "intelligence": ["smart", "dumb", "missing"],
+    "is": ["was", "has", "not"],
+    "transforming": ["morphing", "breaking", "melting"],
+    "future": ["past", "yesterday", "now"],
+    "of": ["the", "a", "thing"],
+    "data": ["garbage", "trash", "null"],
+    "science": ["magic", "alchemy", "lies"],
+
+    "hello": ["bye", "what", "huh"],
+    "world": ["flat", "cube", "simulation"],
+
+    "large": ["big", "fat", "heavy"],
+    "language": ["speak", "talk", "noise"],
+    "models": ["toys", "cars", "planes"],
+    "predict": ["guess", "maybe", "idk"],
+    "next": ["last", "previous", "back"],
+    "token": ["coin", "chip", "money"],
+    ".": ["STOP"]
+};
+
+// Legacy support if needed
+export const bigram = tinyLLM;

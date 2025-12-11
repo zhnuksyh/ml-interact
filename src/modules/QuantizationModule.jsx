@@ -29,7 +29,7 @@ export default function QuantizationModule() {
     });
 
     return (
-        <div className="flex flex-col gap-6 animate-in fade-in zoom-in duration-300">
+        <div className="flex flex-col gap-6 animate-fade-in animate-slide-up">
             <div className="explainer-box">
                 <div className="explainer-title">
                     <span className="bg-blue-600/20 text-blue-400 p-1 rounded mr-3 text-xs">MODULE 4</span>
