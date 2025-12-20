@@ -1,16 +1,44 @@
-# React + Vite
+# ML Interact
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interactive educational tool for visualizing various Machine Learning concepts. This project aims to provide an intuitive and hands-on way to understand the building blocks of modern AI systems.
 
-Currently, two official plugins are available:
+**Live Demo:** [https://zhnuksyh.github.io/ml-interact/](https://zhnuksyh.github.io/ml-interact/)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## React Compiler
+The application is broken down into several interactive modules, each focusing on a specific concept:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- **Chunking**: Visualize how text is split into smaller pieces for processing.
+- **Embeddings**: Explore how text is converted into vector representations.
+- **Vector Search (RAG)**: Understand Retrieval-Augmented Generation through vector similarity search.
+- **Quantization**: See the effects of reducing model precision.
+- **Full Pipeline**: visualize the end-to-end flow of an LLM application.
+- **LLM Basics**: Learn about the fundamental components of Large Language Models.
+- **Inference**: Interact with model inference steps.
+- **Vision / OCR**: Explore Optical Character Recognition and vision capabilities.
+- **MCP / Tools**: a section for Model Context Protocol and external tools.
 
-## Expanding the ESLint configuration
+## Tech Stack
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Framework**: [React](https://react.dev/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Icons**: [Lucide React](https://lucide.dev/)
+
+## Getting Started
+
+To run this project locally, follow these steps:
+
+1.  **Install dependencies**
+
+    ```bash
+    npm install
+    ```
+
+2.  **Start the development server**
+
+    ```bash
+    npm run dev
+    ```
+
+3.  Open your browser and navigate to the URL shown in the terminal (usually `http://localhost:5173`).
